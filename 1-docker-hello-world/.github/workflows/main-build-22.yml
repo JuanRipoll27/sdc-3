@@ -1,0 +1,44 @@
+name: 22 Build and Deploy
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs: 
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.5.0
+      
+    - name: Docker Login
+      # You may pin to the exact commit or the version.
+      # uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      uses: docker/login-action@v2.1.0
+      with:
+        # Server address of Docker registry. If not set then will default to Docker Hub
+        registry: https://index.docker.io/v1/
+        # Username used to log against the Docker registry
+        username: ${{ secrets.dockerhub_username }}
+        # Password or personal access token used to log against the Docker registry
+        password:  ${{ secrets.dockerhub_password }}
+        # Log out from the Docker registry at the end of a job
+        logout: false
+      
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v3.2.0
+      with:
+       push: true
+       tags: index.docker.io/codingmoh/python-hello-world:${{ github.sha }}
+       file: ./Dockerfile
+       
+    - name: Azure WebApp
+      uses: Azure/webapps-deploy@v2.2.5
+      with:
+        # Name of the Azure Web App
+        app-name: fhtw-22-12
+        # Applies to Web Apps(Windows and Linux) and Web App Containers(linux). Multi container scenario not supported. Publish profile (*.publishsettings) file contents with Web Deploy secrets
+        publish-profile: <publishData><publishProfile profileName="fhtw-22-12 - Web Deploy" publishMethod="MSDeploy" publishUrl="fhtw-22-12.scm.azurewebsites.net:443" msdeploySite="fhtw-22-12" userName="$fhtw-22-12" userPWD="oT5y88tpbhjg9mZZ4FMvWgsmJ2dHESMHJ4ytlNilwRRPhPmkG7zisqzTQ2qP" destinationAppUrl="https://fhtw-22-12.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites"><databases /></publishProfile><publishProfile profileName="fhtw-22-12 - FTP" publishMethod="FTP" publishUrl="ftps://waws-prod-am2-345.ftp.azurewebsites.windows.net/site/wwwroot" ftpPassiveMode="True" userName="fhtw-22-12\$fhtw-22-12" userPWD="oT5y88tpbhjg9mZZ4FMvWgsmJ2dHESMHJ4ytlNilwRRPhPmkG7zisqzTQ2qP" destinationAppUrl="https://fhtw-22-12.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites"><databases /></publishProfile><publishProfile profileName="fhtw-22-12 - Zip Deploy" publishMethod="ZipDeploy" publishUrl="fhtw-22-12.scm.azurewebsites.net:443" userName="$fhtw-22-12" userPWD="oT5y88tpbhjg9mZZ4FMvWgsmJ2dHESMHJ4ytlNilwRRPhPmkG7zisqzTQ2qP" destinationAppUrl="https://fhtw-22-12.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="http://windows.azure.com" webSystem="WebSites"><databases /></publishProfile></publishData>
+        # Enter an existing Slot other than the Production slot
+        images: index.docker.io/codingmoh/python-hello-world:${{ github.sha }}

@@ -1,0 +1,8 @@
+version: '3.3'
+
+services:
+  python-hello-world:
+    build: .
+    image: codingmoh/python-hello-world
+    ports:
+      - 80:80

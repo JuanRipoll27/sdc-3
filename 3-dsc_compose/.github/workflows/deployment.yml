@@ -1,0 +1,38 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy Apps
+
+# Controls when the workflow will run
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+ deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Deploy Frontend to Azure Web App
+      id: deploy-fe-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'pyex-tf-app'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_5d6bd7b1bb6c4e26bb5a3bd5e8e27666 }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_8b54ef5a291744ef9e9bcc11a94ab4e7 }}/stremlit_style_tf_fe'
+        
+    - name: Deploy to Azure Web App
+      id: deploy-be-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'pyex-tf-be'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_2257cbc871c343528339db4a0681b78a }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_274181b0e0b94660aeccfb8fe71b5f27 }}/fastapi_style_tf'

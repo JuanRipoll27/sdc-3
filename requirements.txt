@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+bash_kernel
+jupyter
