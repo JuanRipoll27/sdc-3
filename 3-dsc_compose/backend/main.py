@@ -71,6 +71,15 @@ async def transform_image(
     # Inference outputs float pixels: convert them to valid PNG pixels.
     stylized = np.clip(stylized, 0, 255).astype(np.uint8)
 
+    # Neural style models may round the width to a multiple of 4.
+    # Resize their output to the input preview dimensions before blending.
+    if stylized.shape[:2] != resized_original.shape[:2]:
+        stylized = cv2.resize(
+            stylized,
+            (resized_original.shape[1], resized_original.shape[0]),
+            interpolation=cv2.INTER_LINEAR,
+        )
+
     # Blend two equal-size BGR images (no new AI model is involved).
     blended = cv2.addWeighted(
         resized_original, 1.0 - strength, stylized, strength, 0
