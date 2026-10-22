@@ -162,14 +162,14 @@ original_col, output_col = st.columns(2, gap="large")
 with original_col:
     st.markdown("**Original**")
     if original_preview is not None:
-        st.image(original_preview, use_column_width=True)
+        st.image(original_preview, use_container_width=True)
     else:
         st.info("Upload a photo to see the original here.")
 
 with output_col:
     st.markdown("**Stylized**")
     if st.session_state["result_png"]:
-        st.image(st.session_state["result_png"], use_column_width=True)
+        st.image(st.session_state["result_png"], use_container_width=True)
         style_name, last_strength = st.session_state["last_settings"]
         st.caption("{} · {}% intensity".format(style_name, last_strength))
         st.download_button(
