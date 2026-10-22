@@ -48,11 +48,11 @@ Docker Compose creates the internal network automatically. The host uses port **
 For a **fresh clone**, start with:
 
 ~~~powershell
-git clone https://github.com/JuanRipoll27/sdc-3.git
+git clone --branch feature/stylelab-ai-studio https://github.com/JuanRipoll27/sdc-3.git
 cd sdc-3
 ~~~
 
-If the repository is already on your computer, skip cloning and update it with `git pull`. Run the following commands at the **repository root**.
+If the repository is already on your computer, skip cloning. Use `git switch feature/stylelab-ai-studio` (or `git switch --track origin/feature/stylelab-ai-studio` if needed), followed by `git pull`. Run the following commands at the **repository root**.
 
 **1. Obtain the original course models** (the approximately 200 MB of model files are intentionally not tracked in Git):
 
