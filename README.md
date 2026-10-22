@@ -35,7 +35,7 @@ OpenCV + pre-trained .t7 models
   +-- returns image/png to Streamlit
 ```
 
-Docker Compose creates the internal network automatically. The host uses port **8501** for Streamlit and **8080** for FastAPI.
+Docker Compose creates the internal network automatically. The host uses port **8501** for Streamlit and **8080** for FastAPI. Inside the frontend container, the backend is reached via `http://backend:80`. This is the **Compose service name and its container port**, not the host URL. The `depends_on` configuration controls startup order, not whether the API is ready to answer.
 
 ## Requirements
 
@@ -45,7 +45,14 @@ Docker Compose creates the internal network automatically. The host uses port **
 
 ## Quick start (Windows PowerShell)
 
-Open a terminal at the **repository root**.
+For a **fresh clone**, start with:
+
+~~~powershell
+git clone https://github.com/JuanRipoll27/sdc-3.git
+cd sdc-3
+~~~
+
+If the repository is already on your computer, skip cloning and update it with `git pull`. Run the following commands at the **repository root**.
 
 **1. Obtain the original course models** (the approximately 200 MB of model files are intentionally not tracked in Git):
 
@@ -53,7 +60,7 @@ Open a terminal at the **repository root**.
 powershell -ExecutionPolicy Bypass -File .\3-dsc_compose\download_models.ps1
 ```
 
-The script reuses `2-dsc_streamlit/streamlit/models` if available; otherwise it downloads the files from the Stanford fast-neural-style model collection.
+The script reuses `2-dsc_streamlit/streamlit/models` if available; otherwise it downloads the files from the Stanford fast-neural-style model collection. The model files are **not in Git** and must be prepared before the first Docker build. You do not need to install Python locally.
 
 **2. Build and start both services:**
 
@@ -94,6 +101,8 @@ The POST request uses `multipart/form-data` with:
 
 At strength `0`, the output is the resized original; at `1` it is the fully stylized output. Intermediate values use `cv2.addWeighted` to blend the two. Example: `0.85` = 85% stylized image and 15% original.
 
+When `strength=0`, the output is the resized original; `strength=1` is the full neural style output. OpenCV's `cv2.addWeighted` performs the blend after ensuring that the model output and original image have matching dimensions and 8-bit pixel values.
+
 **Test the API from PowerShell:**
 
 ```powershell
@@ -101,7 +110,13 @@ Invoke-RestMethod http://localhost:8080/health
 Invoke-RestMethod http://localhost:8080/styles
 ```
 
-For a manual POST upload, use the interactive Swagger UI: choose a style endpoint, click **Try it out**, add a file and intensity, then **Execute**.
+To test image processing directly, put a file named `photo.jpg` in the current PowerShell folder and run:
+
+~~~powershell
+curl.exe -f -X POST -F "file=@photo.jpg" -F "strength=0.5" http://localhost:8080/candy -o stylelab-result.png
+~~~
+
+Alternatively, use the interactive Swagger UI: expand **POST /{style}**, click **Try it out**, enter a style (for example `candy`), attach an image, set the intensity and select **Execute**. Invalid styles return HTTP 404; invalid images return HTTP 400; intensity values outside 0–1 return HTTP 422.
 
 ## Files worth explaining in class
 
@@ -112,6 +127,9 @@ For a manual POST upload, use the interactive Swagger UI: choose a style endpoin
 - `3-dsc_compose/docker-compose.yml` — builds the services, maps host ports and connects the internal network.
 
 ## Five-minute live demo
+
+A complete **spoken presentation script in English**, including code walkthrough, commands, expected results and likely questions, is available in **[docs/CLASS_DEMO.md](docs/CLASS_DEMO.md)**.
+
 
 1. Explain why the frontend and backend are separate containers.
 2. Run `docker compose up -d --build` and `docker compose ps`.
@@ -126,4 +144,16 @@ For a manual POST upload, use the interactive Swagger UI: choose a style endpoin
 2. `2-dsc_streamlit`: run a Streamlit style-transfer app with Docker and Compose.
 3. `3-dsc_compose`: run frontend and backend separately, connect them through Docker networking, and orchestrate them with Compose.
 
-The original .t7 files belong to their respective creators; this repository does not redistribute them. The original educational Azure/GitHub Actions examples under exercise subfolders are not part of the StyleLab local deployment and should not be reused without checking their settings and credentials.
+### Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Frontend reports a disconnected backend | `docker compose ps` and `docker compose logs backend --tail=50` |
+| Processing returns HTTP 500 | `docker compose logs backend --tail=60`; check `backend/models` contains the downloaded models |
+| Port 8501 or 8080 is busy | Use `docker ps` and stop the other app using that host port |
+| Changes are not visible | Rebuild with `docker compose up -d --build` and refresh the page |
+| A fresh clone cannot process images | Run `download_models.ps1` first; model binaries are excluded from Git |
+
+### Scope and credits
+
+This is a **local educational demo**, not a public cloud deployment. It has no database, authentication or persistent image storage. The original .t7 files belong to their respective creators; this repository does not redistribute them. The original educational Azure/GitHub Actions examples under exercise subfolders are not part of the StyleLab local deployment and should not be reused without checking their settings and credentials.
